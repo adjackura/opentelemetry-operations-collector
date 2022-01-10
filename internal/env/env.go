@@ -15,15 +15,8 @@
 package env
 
 import (
-	"fmt"
-	"math"
-	"os"
 	"runtime"
 	"strings"
-
-	"github.com/shirou/gopsutil/disk"
-	"github.com/shirou/gopsutil/host"
-	"github.com/shirou/gopsutil/mem"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-collector/internal/version"
 )
@@ -39,51 +32,10 @@ func Create() error {
 }
 
 func getUserAgent() (string, error) {
-	hostInfo, err := host.Info()
-	if err != nil {
-		return "", err
-	}
-
-	cores := runtime.NumCPU()
-
-	memory, err := mem.VirtualMemory()
-	if err != nil {
-		return "", err
-	}
-
-	partitions, err := disk.Partitions(false)
-	if err != nil {
-		return "", err
-	}
-
-	var totalDiskCapacity uint64
-	for _, partition := range partitions {
-		disk, err := disk.Usage(partition.Mountpoint)
-		if err != nil {
-			return "", err
-		}
-		totalDiskCapacity += disk.Total
-	}
-
-	platform := hostInfo.Platform
-	if platform == "" {
-		platform = "Unknown"
-	}
-
-	platformVersion := hostInfo.PlatformVersion
-	if platformVersion != "" {
-		platformVersion = fmt.Sprintf("v%v ", platformVersion)
-	}
-
 	userAgent := fmt.Sprintf(
-		"Google Cloud Metrics Agent/%v (TargetPlatform=%v; Framework=OpenTelemetry Collector) %s %s(Cores=%v; Memory=%0.1fGB; Disk=%0.1fGB)",
+		"Google Cloud Metrics Agent/%v (TargetPlatform=%v; Framework=OpenTelemetry Collector)",
 		version.Version,
 		strings.Title(runtime.GOOS),
-		platform,
-		platformVersion,
-		cores,
-		float64(memory.Total)/math.Pow(1024, 3),
-		float64(totalDiskCapacity)/math.Pow(1024, 3),
 	)
 
 	return userAgent, nil
